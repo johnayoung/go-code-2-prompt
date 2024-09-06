@@ -10,7 +10,7 @@ BINARY_UNIX=$(BINARY_NAME)_unix
 all: test build
 
 build:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/go-code-2-prompt
+	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/bin/go-code-2-prompt
 
 test:
 	$(GOTEST) -v ./...
@@ -21,7 +21,7 @@ clean:
 	rm -f $(BINARY_UNIX)
 
 run:
-	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/go-code-2-prompt
+	$(GOBUILD) -o $(BINARY_NAME) -v ./cmd/bin/go-code-2-prompt
 	./$(BINARY_NAME)
 
 deps:
@@ -29,4 +29,4 @@ deps:
 
 # Cross compilation
 build-linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_UNIX) -v ./cmd/go-code-2-prompt
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_UNIX) -v ./cmd/bin/go-code-2-prompt
