@@ -30,21 +30,28 @@ func ParseFlags() (*Config, error) {
 	flag.StringVar(&config.GitBranch2, "branch2", "", "Second branch for git diff/log")
 	flag.BoolVar(&config.IncludeGitLog, "git-log", false, "Include git log between branches")
 
-	includes := flag.String("include", "", "Include patterns (comma-separated)")
-	excludes := flag.String("exclude", "", "Exclude patterns (comma-separated)")
+	var includes, excludes string
+	flag.StringVar(&includes, "include", "", "Include patterns (comma-separated)")
+	flag.StringVar(&excludes, "exclude", "", "Exclude patterns (comma-separated)")
 
 	flag.Parse()
 
-	if *includes != "" {
-		config.IncludePatterns = splitPatterns(*includes)
-	}
-	if *excludes != "" {
-		config.ExcludePatterns = splitPatterns(*excludes)
-	}
+	config.IncludePatterns = splitAndTrimPatterns(includes)
+	config.ExcludePatterns = splitAndTrimPatterns(excludes)
 
 	return config, nil
 }
 
-func splitPatterns(patterns string) []string {
-	return strings.Split(patterns, ",")
+func splitAndTrimPatterns(patterns string) []string {
+	if patterns == "" {
+		return nil
+	}
+	split := strings.Split(patterns, ",")
+	trimmed := make([]string, 0, len(split))
+	for _, s := range split {
+		if t := strings.TrimSpace(s); t != "" {
+			trimmed = append(trimmed, t)
+		}
+	}
+	return trimmed
 }

@@ -17,6 +17,12 @@ go-code-2-prompt is a powerful command-line tool designed to generate prompts fo
 - **Flexible Output**: Supports writing to a file or standard output.
 - **Token Counting**: Counts the number of tokens in the generated prompt using various tokenization schemes (cl100k_base, p50k_base, r50k_base) and displays the count in the terminal.
 - **Execution Time**: Displays the total execution time of the program in the terminal.
+- **Automatic .git Exclusion**: The tool automatically excludes the .git folder and its contents from the generated prompt and source tree.
+
+## Behavior
+
+- The tool automatically excludes the .git folder and its contents from both the file traversal and the source tree generation. This helps to reduce the output size and remove unnecessary information from the generated prompt.
+- If you need to include git-related information, use the `-git-diff` and `-git-log` flags. These will include relevant git information without including the entire .git folder contents.
 
 ## Installation
 
@@ -36,16 +42,6 @@ go build ./cmd/go-code-2-prompt
 
 ## Usage
 
-When you run go-code-2-prompt, you'll see output in the terminal like this:
-
-```
-Starting go-code-2-prompt...
-Finished in 1.234s
-Token count: 5678
-```
-
-The actual prompt will be written to the specified output file or printed to stdout, depending on your configuration.
-
 Here's the basic usage of go-code-2-prompt:
 
 ```
@@ -56,7 +52,7 @@ go-code-2-prompt [flags]
 
 - `-dir string`: Root directory to traverse (default ".")
 - `-output string`: Output file (default: stdout)
-- `-tokenizer string`: Tokenizer to use (default "cl100k")
+- `-tokenizer string`: Tokenizer to use (default "cl100k_base", options: "cl100k_base", "p50k_base", "r50k_base")
 - `-template string`: Custom template file
 - `-include string`: Include patterns (comma-separated)
 - `-exclude string`: Exclude patterns (comma-separated)
@@ -64,7 +60,6 @@ go-code-2-prompt [flags]
 - `-branch1 string`: First branch for git diff/log (default: current branch)
 - `-branch2 string`: Second branch for git diff/log
 - `-git-log`: Include git log between branches
-- - `-tokenizer string`: Tokenizer to use (default "cl100k_base", options: "cl100k_base", "p50k_base", "r50k_base", "cl100k", "p50k", "r50k")
 
 ### Examples
 
@@ -78,20 +73,22 @@ go-code-2-prompt [flags]
    go-code-2-prompt -dir /path/to/project -include "*.go"
    ```
 
-3. Generate a prompt with Git diff and log information:
+3. Generate a prompt including files from multiple specific directories:
+   ```
+   go-code-2-prompt -dir /path/to/project -include "path/dir1/*,path/dir2/*"
+   ```
+
+4. Generate a prompt with Git diff and log information:
    ```
    go-code-2-prompt -git-diff -git-log -branch1 main -branch2 feature-branch
    ```
 
-4. Generate a prompt and save it to a file:
+5. Generate a prompt and save it to a file:
    ```
    go-code-2-prompt -output prompt.txt
    ```
 
-5. Generate a prompt and count tokens using a specific tokenizer:
-   ```
-   go-code-2-prompt -tokenizer p50k_base
-   ```   
+Note: When specifying multiple include or exclude patterns, separate them with commas. Do not use multiple `-include` or `-exclude` flags.
 
 ## Output
 

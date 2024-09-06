@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/johnayoung/go-code-2-prompt/internal/fileutils"
@@ -23,10 +24,24 @@ func main() {
 		log.Fatalf("Error parsing flags: %v", err)
 	}
 
+	// Print configuration
+	fmt.Printf("Configuration:\n")
+	fmt.Printf("  RootDir: %s\n", cfg.RootDir)
+	fmt.Printf("  IncludePatterns: %v\n", cfg.IncludePatterns)
+	fmt.Printf("  ExcludePatterns: %v\n", cfg.ExcludePatterns)
+	fmt.Printf("  OutputFile: %s\n", cfg.OutputFile)
+	fmt.Printf("  Tokenizer: %s\n", cfg.Tokenizer)
+
 	fs := afero.NewOsFs()
 	files, err := fileutils.TraverseDirectory(fs, cfg)
 	if err != nil {
 		log.Fatalf("Error traversing directory: %v", err)
+	}
+
+	fmt.Printf("Found %d files to include in the prompt:\n", len(files))
+	for _, file := range files {
+		relPath, _ := filepath.Rel(cfg.RootDir, file)
+		fmt.Printf("  %s\n", relPath)
 	}
 
 	if cfg.IncludeGitDiff || cfg.IncludeGitLog {

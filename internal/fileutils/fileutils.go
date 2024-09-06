@@ -18,9 +18,16 @@ func TraverseDirectory(fs afero.Fs, cfg *config.Config) ([]string, error) {
 	err := godirwalk.Walk(cfg.RootDir, &godirwalk.Options{
 		Callback: func(path string, de *godirwalk.Dirent) error {
 			if de.IsDir() {
+				if de.Name() == ".git" {
+					return godirwalk.SkipThis
+				}
 				return nil
 			}
-			if ShouldIncludeFile(path, cfg.IncludePatterns, cfg.ExcludePatterns) {
+			relPath, err := filepath.Rel(cfg.RootDir, path)
+			if err != nil {
+				return err
+			}
+			if ShouldIncludeFile(relPath, cfg.IncludePatterns, cfg.ExcludePatterns) {
 				files = append(files, path)
 			}
 			return nil
@@ -31,11 +38,16 @@ func TraverseDirectory(fs afero.Fs, cfg *config.Config) ([]string, error) {
 	return files, err
 }
 
-func ShouldIncludeFile(path string, includePatterns, excludePatterns []string) bool {
+func ShouldIncludeFile(relPath string, includePatterns, excludePatterns []string) bool {
+	// Always exclude files in the .git directory
+	if strings.Contains(relPath, ".git"+string(filepath.Separator)) {
+		return false
+	}
+
 	// Check exclude patterns first
 	for _, pattern := range excludePatterns {
 		g := glob.MustCompile(pattern)
-		if g.Match(path) {
+		if g.Match(relPath) {
 			return false
 		}
 	}
@@ -48,7 +60,7 @@ func ShouldIncludeFile(path string, includePatterns, excludePatterns []string) b
 	// Check include patterns
 	for _, pattern := range includePatterns {
 		g := glob.MustCompile(pattern)
-		if g.Match(path) {
+		if g.Match(relPath) {
 			return true
 		}
 	}
