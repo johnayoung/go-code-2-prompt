@@ -16,6 +16,8 @@ import (
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+
 	startTime := time.Now()
 	fmt.Println("Starting go-code-2-prompt...")
 

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/johnayoung/go-code-2-prompt/internal/fileutils"
 	"github.com/johnayoung/go-code-2-prompt/internal/gitops"
 	"github.com/johnayoung/go-code-2-prompt/pkg/config"
@@ -97,7 +98,13 @@ func generateSourceTree(rootDir string) (string, error) {
 	buffer.WriteString("Source Tree:\n\n```\n")
 	buffer.WriteString(filepath.Base(rootDir) + "\n")
 
-	err := filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
+	// Load .gitignore patterns
+	matcher, err := loadGitignorePatterns(rootDir)
+	if err != nil {
+		return "", fmt.Errorf("error loading .gitignore patterns: %v", err)
+	}
+
+	err = filepath.Walk(rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -105,17 +112,19 @@ func generateSourceTree(rootDir string) (string, error) {
 			return nil
 		}
 
-		// Skip .git directory
-		if info.IsDir() && info.Name() == ".git" {
-			return filepath.SkipDir
-		}
-
-		rel, err := filepath.Rel(rootDir, path)
+		// Check if the file/directory is ignored
+		relPath, err := filepath.Rel(rootDir, path)
 		if err != nil {
 			return err
 		}
+		if isIgnored(relPath, matcher) {
+			if info.IsDir() {
+				return filepath.SkipDir
+			}
+			return nil
+		}
 
-		depth := strings.Count(rel, string(os.PathSeparator))
+		depth := strings.Count(relPath, string(os.PathSeparator))
 		if info.IsDir() {
 			buffer.WriteString(strings.Repeat("│   ", depth) + "├── " + info.Name() + "\n")
 		} else {
@@ -132,6 +141,31 @@ func generateSourceTree(rootDir string) (string, error) {
 	}
 
 	return buffer.String(), nil
+}
+
+func loadGitignorePatterns(rootDir string) (gitignore.Matcher, error) {
+	ps := []gitignore.Pattern{}
+
+	// Load .gitignore file
+	gitignorePath := filepath.Join(rootDir, ".gitignore")
+	if _, err := os.Stat(gitignorePath); err == nil {
+		content, err := os.ReadFile(gitignorePath)
+		if err != nil {
+			return nil, fmt.Errorf("error reading .gitignore: %v", err)
+		}
+
+		for _, line := range strings.Split(string(content), "\n") {
+			if strings.TrimSpace(line) != "" && !strings.HasPrefix(line, "#") {
+				ps = append(ps, gitignore.ParsePattern(line, nil))
+			}
+		}
+	}
+
+	return gitignore.NewMatcher(ps), nil
+}
+
+func isIgnored(relPath string, matcher gitignore.Matcher) bool {
+	return matcher.Match(strings.Split(relPath, string(os.PathSeparator)), false)
 }
 
 func renderTemplate(data PromptData, cfg *config.Config) (string, error) {
