@@ -112,6 +112,11 @@ func generateSourceTree(rootDir string) (string, error) {
 			return nil
 		}
 
+		// Explicitly exclude the .git folder
+		if info.IsDir() && info.Name() == ".git" {
+			return filepath.SkipDir
+		}
+
 		// Check if the file/directory is ignored
 		relPath, err := filepath.Rel(rootDir, path)
 		if err != nil {
