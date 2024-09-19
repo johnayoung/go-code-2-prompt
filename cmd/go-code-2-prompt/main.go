@@ -33,9 +33,16 @@ func main() {
 	fmt.Printf("  ExcludePatterns: %v\n", cfg.ExcludePatterns)
 	fmt.Printf("  OutputFile: %s\n", cfg.OutputFile)
 	fmt.Printf("  Tokenizer: %s\n", cfg.Tokenizer)
+	fmt.Printf("  ShowHighTokenFolders: %v\n", cfg.ShowHighTokenFolders)
+	fmt.Printf("  HighTokenFolderCount: %d\n", cfg.HighTokenFolderCount)
+
+	tokenizer, err := tokenizer.GetTokenizer(cfg.Tokenizer)
+	if err != nil {
+		log.Fatalf("Error getting tokenizer: %v", err)
+	}
 
 	fs := afero.NewOsFs()
-	files, err := fileutils.TraverseDirectory(fs, cfg)
+	files, folderInfo, err := fileutils.TraverseDirectory(fs, cfg, tokenizer)
 	if err != nil {
 		log.Fatalf("Error traversing directory: %v", err)
 	}
@@ -58,11 +65,6 @@ func main() {
 	}
 
 	// Count tokens
-	tokenizer, err := tokenizer.GetTokenizer(cfg.Tokenizer)
-	if err != nil {
-		log.Fatalf("Error getting tokenizer: %v", err)
-	}
-
 	tokenCount, err := tokenizer.CountTokens(prompt)
 	if err != nil {
 		log.Fatalf("Error counting tokens: %v", err)
@@ -75,6 +77,14 @@ func main() {
 	duration := time.Since(startTime)
 	fmt.Printf("Finished in %v\n", duration)
 	fmt.Printf("Token count: %d\n", tokenCount)
+
+	if cfg.ShowHighTokenFolders {
+		highTokenFolders := fileutils.GetHighTokenFolders(folderInfo, cfg.HighTokenFolderCount)
+		fmt.Printf("\nHigh Token Folders:\n")
+		for i, folder := range highTokenFolders {
+			fmt.Printf("%d. %s (Tokens: %d, Files: %d)\n", i+1, folder.Path, folder.TokenCount, folder.FileCount)
+		}
+	}
 }
 
 func outputPrompt(prompt string, cfg *config.Config) error {

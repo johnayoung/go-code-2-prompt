@@ -5,17 +5,25 @@ import (
 	"strings"
 )
 
+type FolderInfo struct {
+	Path       string
+	TokenCount int
+	FileCount  int
+}
+
 type Config struct {
-	RootDir         string
-	IncludePatterns []string
-	ExcludePatterns []string
-	OutputFile      string
-	Tokenizer       string
-	Template        string
-	IncludeGitDiff  bool
-	GitBranch1      string
-	GitBranch2      string
-	IncludeGitLog   bool
+	RootDir              string
+	IncludePatterns      []string
+	ExcludePatterns      []string
+	OutputFile           string
+	Tokenizer            string
+	Template             string
+	IncludeGitDiff       bool
+	GitBranch1           string
+	GitBranch2           string
+	IncludeGitLog        bool
+	ShowHighTokenFolders bool
+	HighTokenFolderCount int
 }
 
 func ParseFlags() (*Config, error) {
@@ -29,6 +37,8 @@ func ParseFlags() (*Config, error) {
 	flag.StringVar(&config.GitBranch1, "branch1", "", "First branch for git diff/log (default: current branch)")
 	flag.StringVar(&config.GitBranch2, "branch2", "", "Second branch for git diff/log")
 	flag.BoolVar(&config.IncludeGitLog, "git-log", false, "Include git log between branches")
+	flag.BoolVar(&config.ShowHighTokenFolders, "show-high-token-folders", false, "Show folders with high token counts")
+	flag.IntVar(&config.HighTokenFolderCount, "high-token-folder-count", 5, "Number of high token folders to show")
 
 	var includes, excludes string
 	flag.StringVar(&includes, "include", "", "Include patterns (comma-separated)")

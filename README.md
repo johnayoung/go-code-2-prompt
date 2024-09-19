@@ -60,6 +60,8 @@ go-code-2-prompt [flags]
 - `-branch1 string`: First branch for git diff/log (default: current branch)
 - `-branch2 string`: Second branch for git diff/log
 - `-git-log`: Include git log between branches
+- `-show-high-token-folders`: Show folders with high token counts
+- `-high-token-folder-count int`: Number of high token folders to show (default 5)
 
 ### Examples
 
@@ -86,6 +88,16 @@ go-code-2-prompt [flags]
 5. Generate a prompt and save it to a file:
    ```
    go-code-2-prompt -output prompt.txt
+   ```
+
+6. Generate a prompt for the current directory and show high token folders:
+   ```
+   go-code-2-prompt -show-high-token-folders
+   ```
+
+7. Generate a prompt for a specific directory, including only Go files, and show top 10 high token folders:
+   ```
+   go-code-2-prompt -dir /path/to/project -include "*.go" -show-high-token-folders -high-token-folder-count 10
    ```
 
 Note: When specifying multiple include or exclude patterns, separate them with commas. Do not use multiple `-include` or `-exclude` flags.
