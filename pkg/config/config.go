@@ -24,6 +24,7 @@ type Config struct {
 	IncludeGitLog        bool
 	ShowHighTokenFolders bool
 	HighTokenFolderCount int
+	Debug                bool
 }
 
 func ParseFlags() (*Config, error) {
@@ -39,6 +40,7 @@ func ParseFlags() (*Config, error) {
 	flag.BoolVar(&config.IncludeGitLog, "git-log", false, "Include git log between branches")
 	flag.BoolVar(&config.ShowHighTokenFolders, "show-high-token-folders", false, "Show folders with high token counts")
 	flag.IntVar(&config.HighTokenFolderCount, "high-token-folder-count", 5, "Number of high token folders to show")
+	flag.BoolVar(&config.Debug, "debug", false, "Enable debug logging")
 
 	var includes, excludes string
 	flag.StringVar(&includes, "include", "", "Include patterns (comma-separated)")

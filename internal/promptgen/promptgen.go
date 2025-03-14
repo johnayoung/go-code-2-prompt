@@ -33,10 +33,6 @@ func GeneratePrompt(fs afero.Fs, files []string, cfg *config.Config) (string, er
 	var fileInfos []FileInfo
 
 	for _, file := range files {
-		if !fileutils.IsTextFile(file) {
-			continue
-		}
-
 		content, err := fileutils.ReadFileContent(fs, file)
 		if err != nil {
 			return "", fmt.Errorf("error reading file %s: %v", file, err)

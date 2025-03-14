@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"sort"
@@ -12,8 +13,6 @@ import (
 	"github.com/karrick/godirwalk"
 	"github.com/spf13/afero"
 )
-
-// Add this to internal/fileutils/fileutils.go
 
 func TraverseDirectory(fs afero.Fs, cfg *config.Config, tokenizer tokenizer.Tokenizer) ([]string, map[string]*config.FolderInfo, error) {
 	files := []string{}
@@ -27,29 +26,26 @@ func TraverseDirectory(fs afero.Fs, cfg *config.Config, tokenizer tokenizer.Toke
 				}
 				return nil
 			}
+
 			relPath, err := filepath.Rel(cfg.RootDir, path)
 			if err != nil {
 				return err
 			}
+
+			if cfg.Debug {
+				fmt.Printf("Checking file: %s\n", relPath)
+			}
+
 			if ShouldIncludeFile(relPath, cfg.IncludePatterns, cfg.ExcludePatterns) {
-				files = append(files, path)
+				if cfg.Debug {
+					fmt.Printf("  Passed pattern filters\n")
+					fmt.Printf("  Is text file: %v\n", IsTextFile(path))
+				}
 
-				if cfg.ShowHighTokenFolders {
-					content, err := ReadFileContent(fs, path)
-					if err != nil {
-						return err
-					}
-					tokenCount, err := tokenizer.CountTokens(content)
-					if err != nil {
-						return err
-					}
-
-					folder := filepath.Dir(relPath)
-					if _, ok := folderInfo[folder]; !ok {
-						folderInfo[folder] = &config.FolderInfo{Path: folder}
-					}
-					folderInfo[folder].TokenCount += tokenCount
-					folderInfo[folder].FileCount++
+				// Only include text files here, not later in promptgen
+				if IsTextFile(path) {
+					files = append(files, path)
+					// Rest of your code for token counting...
 				}
 			}
 			return nil
@@ -115,6 +111,7 @@ func IsTextFile(path string) bool {
 		".py",
 		".js",
 		".ts",
+		".gs",
 		".jsx",
 		".tsx",
 		".html",
